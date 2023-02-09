@@ -88,7 +88,7 @@ fn main() -> Result<(), AppError> {
                 })
                 .collect();
 
-            indices.sort();
+            indices.sort_unstable();
             indices.reverse();
 
             for idx in indices {
