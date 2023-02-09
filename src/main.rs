@@ -1,5 +1,5 @@
 use std::env;
-use std::fs::{OpenOptions, create_dir_all};
+use std::fs::{create_dir_all, OpenOptions};
 use std::io::{self, prelude::*, BufRead, BufReader};
 
 #[derive(Debug)]
@@ -26,16 +26,15 @@ fn print_help() {
 }
 
 fn main() -> Result<(), AppError> {
-    let data_dir = match env::var("XDG_DATA_HOME") {
-        Ok(path) => format!("{}/todo", path),
-        Err(_) => {
-            let home_folder = env::var("HOME").expect("Failed to get name of home folder");
-            format!("{}/.local/share/todo", home_folder)
-        }
+    let data_dir = if let Ok(path) = env::var("XDG_DATA_HOME") {
+        format!("{path}/todo")
+    } else {
+        let home_folder = env::var("HOME").expect("Failed to get name of home folder");
+        format!("{home_folder}/.local/share/todo")
     };
 
     create_dir_all(&data_dir)?;
-    let todo_path = format!("{}/todo_list.txt", data_dir);
+    let todo_path = format!("{data_dir}/todo_list.txt");
 
     let file = OpenOptions::new()
         .read(true)
@@ -50,41 +49,32 @@ fn main() -> Result<(), AppError> {
             if let Err(ref e) = line {
                 println!("Failed to read line {}", e);
             }
-            line.ok() 
+            line.ok()
         })
         .collect();
 
     let args: Vec<String> = env::args().collect();
 
-    let operation = match args.get(1) {
-        Some(op) => (*op).clone(),
-        None => {
-            print_help();
-            return Err(AppError::MissingCommand);
-        }
+    let operation = if let Some(op) = args.get(1) { (*op).clone() } else {
+        print_help();
+        return Err(AppError::MissingCommand);
     };
 
     match operation.as_str() {
         "add" => {
-            let new_todos = match args.get(2..) {
-                Some(args) => args,
-                None => {
-                    print_help();
-                    return Err(AppError::MissingArgs);
-                }
+            let new_todos = if let Some(a) = args.get(2..) { a } else {
+                print_help();
+                return Err(AppError::MissingArgs);
             };
 
-            for todo in new_todos { 
+            for todo in new_todos {
                 todo_list.push(todo.clone());
             }
-        },
+        }
         "done" => {
-            let args: &[String] = match args.get(2..) {
-                Some(args) => args,
-                None => {
-                    print_help();
-                    return Err(AppError::MissingArgs);
-                }
+            let args: &[String] = if let Some(a) = args.get(2..) { a } else {
+                print_help();
+                return Err(AppError::MissingArgs);
             };
 
             let mut indices: Vec<usize> = args
@@ -93,7 +83,7 @@ fn main() -> Result<(), AppError> {
                     Ok(0) | Err(_) => {
                         println!("{} could not be parsed into a positive integer", str);
                         None
-                    },
+                    }
                     Ok(idx) => Some(idx - 1),
                 })
                 .collect();
@@ -103,11 +93,11 @@ fn main() -> Result<(), AppError> {
 
             for idx in indices {
                 let done = todo_list.remove(idx);
-                println!("DONE!: {}", done);
+                println!("DONE!: {done}");
             }
-        },
+        }
         "list" => {
-        // Preprocessing this string seems to be faster than printing each line in a for loop
+            // Preprocessing this string seems to be faster than printing each line in a for loop
             let output: String = todo_list
                 .iter()
                 .enumerate()
@@ -117,15 +107,15 @@ fn main() -> Result<(), AppError> {
 
             println!("{}", output);
 
-            return Ok(())
-        },
+            return Ok(());
+        }
         "help" | "--help" | "-h" => {
             print_help();
             return Ok(());
-        },
+        }
         _ => {
             print_help();
-            return Err(AppError::InvalidCommand)
+            return Err(AppError::InvalidCommand);
         }
     };
 
@@ -137,11 +127,11 @@ fn main() -> Result<(), AppError> {
         .expect("Failed to open file for writing");
 
     let file_content = todo_list.clone().join("\n");
-    file.write_all(file_content.as_bytes()).expect("Failed to write to file");
+    file.write_all(file_content.as_bytes())
+        .expect("Failed to write to file");
 
     Ok(())
 }
-
 
 mod test {
     #[test]
