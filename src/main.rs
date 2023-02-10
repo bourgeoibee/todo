@@ -17,12 +17,12 @@ impl From<io::Error> for AppError {
 }
 
 fn print_help() {
-    println!("Usage: todo [COMMAND] [ARGS]...");
-    println!("Commands:");
-    println!("  add TODOS...    Add to todo list");
-    println!("  done INDICES... Remove indices from list");
-    println!("  list            Print the list");
-    println!("  help            Print this text");
+    eprintln!("Usage: todo [COMMAND] [ARGS]...");
+    eprintln!("Commands:");
+    eprintln!("  add TODOS...    Add to todo list");
+    eprintln!("  done INDICES... Remove indices from list");
+    eprintln!("  list            Print the list");
+    eprintln!("  help            Print this text");
 }
 
 fn main() -> Result<(), AppError> {
@@ -47,7 +47,7 @@ fn main() -> Result<(), AppError> {
         .lines()
         .filter_map(|line| {
             if let Err(ref e) = line {
-                println!("Failed to read line {}", e);
+                eprintln!("Failed to read line {e}");
             }
             line.ok()
         })
@@ -81,7 +81,7 @@ fn main() -> Result<(), AppError> {
                 .iter()
                 .filter_map(|str| match str.parse::<usize>() {
                     Ok(0) | Err(_) => {
-                        println!("{} could not be parsed into a positive integer", str);
+                        eprintln!("{str} could not be parsed into a positive integer");
                         None
                     }
                     Ok(idx) => Some(idx - 1),
