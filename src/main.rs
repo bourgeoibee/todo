@@ -101,11 +101,11 @@ fn main() -> Result<(), AppError> {
             let output: String = todo_list
                 .iter()
                 .enumerate()
-                .map(|(i, t)| format!("{} {}", i + 1, t))
+                .map(|(i, t)| format!("{} {}\n", i + 1, t))
                 .collect::<Vec<String>>()
-                .join("\n");
+                .join("");
 
-            println!("{}", output);
+            print!("{output}");
 
             return Ok(());
         }
